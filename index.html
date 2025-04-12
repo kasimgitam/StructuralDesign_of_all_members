@@ -1317,27 +1317,112 @@
         
         // Global design data
         let designData = {
-            slab: {},
-            beam: {},
-            column: {},
-            footing: {},
-            torsion: {},
-            irregularity: {},
-            materials: {},
-            loading: {}
+            slab: {
+                thickness: 150,
+                spanX: 5.0,
+                spanY: 6.0,
+                supportCondition: "all",
+                effectiveDepth: 125
+            },
+            beam: {
+                width: 300,
+                depth: 600,
+                span: 6.0,
+                supportCondition: "simplySupported",
+                effectiveDepth: 550
+            },
+            column: {
+                width: 300,
+                depth: 450,
+                height: 3.0,
+                type: "tied"
+            },
+            footing: {
+                length: 1.5,
+                width: 1.5,
+                thickness: 450,
+                soilType: "hard",
+                effectiveDepth: 400
+            },
+            torsion: {
+                lengthX: 30.0,
+                widthY: 20.0,
+                cmX: 15.0,
+                cmY: 10.0,
+                csX: 14.2,
+                csY: 9.8
+            },
+            irregularity: {
+                massIrregularity: "no",
+                verticalGeometric: "no",
+                stiffnessIrregularity: "no",
+                verticalDiscontinuity: "no",
+                reentrantCorners: "no"
+            },
+            materials: {
+                concreteGrade: 25,
+                steelGrade: 415,
+                fck: 25,
+                fy: 415
+            },
+            loading: {
+                liveLoad: 3.0,
+                floorFinishLoad: 1.0,
+                wallLoad: 12.0,
+                soilCapacity: 150,
+                floorHeight: 3.0,
+                seismicZone: "0.16",
+                seismicZoneFactor: 0.16
+            }
         };
         
         // Initialize all designs
         function initializeDesigns() {
-            updateMaterialProperties();
-            updateLoadingConditions();
-            updateSlabDesign();
-            updateBeamDesign();
-            updateColumnDesign();
-            updateFootingDesign();
-            updateTorsionChecks();
-            updateIrregularityChecks();
-            updateFlowDiagram();
+            // Set initial values in inputs
+            document.getElementById('concreteGrade').value = designData.materials.concreteGrade;
+            document.getElementById('steelGrade').value = designData.materials.steelGrade;
+            document.getElementById('floorHeight').value = designData.loading.floorHeight;
+            document.getElementById('seismicZone').value = designData.loading.seismicZone;
+            document.getElementById('liveLoad').value = designData.loading.liveLoad;
+            document.getElementById('floorFinishLoad').value = designData.loading.floorFinishLoad;
+            document.getElementById('wallLoad').value = designData.loading.wallLoad;
+            document.getElementById('soilCapacity').value = designData.loading.soilCapacity;
+            
+            document.getElementById('slabThickness').value = designData.slab.thickness;
+            document.getElementById('slabSpanX').value = designData.slab.spanX;
+            document.getElementById('slabSpanY').value = designData.slab.spanY;
+            document.getElementById('slabSupportCondition').value = designData.slab.supportCondition;
+            
+            document.getElementById('beamWidth').value = designData.beam.width;
+            document.getElementById('beamDepth').value = designData.beam.depth;
+            document.getElementById('beamSpan').value = designData.beam.span;
+            document.getElementById('beamSupportCondition').value = designData.beam.supportCondition;
+            
+            document.getElementById('columnWidth').value = designData.column.width;
+            document.getElementById('columnDepth').value = designData.column.depth;
+            document.getElementById('columnHeight').value = designData.column.height;
+            document.getElementById('columnType').value = designData.column.type;
+            
+            document.getElementById('footingLength').value = designData.footing.length;
+            document.getElementById('footingWidth').value = designData.footing.width;
+            document.getElementById('footingThickness').value = designData.footing.thickness;
+            document.getElementById('soilType').value = designData.footing.soilType;
+            
+            document.getElementById('buildingLengthX').value = designData.torsion.lengthX;
+            document.getElementById('buildingWidthY').value = designData.torsion.widthY;
+            document.getElementById('centerMassX').value = designData.torsion.cmX;
+            document.getElementById('centerMassY').value = designData.torsion.cmY;
+            document.getElementById('centerStiffnessX').value = designData.torsion.csX;
+            document.getElementById('centerStiffnessY').value = designData.torsion.csY;
+            
+            document.getElementById('massIrregularity').value = designData.irregularity.massIrregularity;
+            document.getElementById('verticalGeometricIrregularity').value = designData.irregularity.verticalGeometric;
+            document.getElementById('stiffnessIrregularity').value = designData.irregularity.stiffnessIrregularity;
+            document.getElementById('verticalDiscontinuity').value = designData.irregularity.verticalDiscontinuity;
+            document.getElementById('reentrantCorners').value = designData.irregularity.reentrantCorners;
+            
+            // Update all designs
+            updateAllDesigns();
         }
         
         // Update all designs when global parameters change
@@ -1353,7 +1438,7 @@
             updateFlowDiagram();
         }
         
-        // Update material properties
+        // Update material properties from inputs
         function updateMaterialProperties() {
             designData.materials = {
                 concreteGrade: parseInt(document.getElementById('concreteGrade').value),
@@ -1363,7 +1448,7 @@
             };
         }
         
-        // Update loading conditions
+        // Update loading conditions from inputs
         function updateLoadingConditions() {
             designData.loading = {
                 liveLoad: parseFloat(document.getElementById('liveLoad').value),
@@ -1378,32 +1463,27 @@
         
         // Slab design calculations
         function updateSlabDesign() {
-            const slabThickness = parseFloat(document.getElementById('slabThickness').value);
-            const spanX = parseFloat(document.getElementById('slabSpanX').value);
-            const spanY = parseFloat(document.getElementById('slabSpanY').value);
-            const supportCondition = document.getElementById('slabSupportCondition').value;
-            
-            // Store slab data
+            // Update slab data from inputs
             designData.slab = {
-                thickness: slabThickness,
-                spanX: spanX,
-                spanY: spanY,
-                supportCondition: supportCondition,
-                effectiveDepth: slabThickness - 25 // 25mm cover
+                thickness: parseFloat(document.getElementById('slabThickness').value),
+                spanX: parseFloat(document.getElementById('slabSpanX').value),
+                spanY: parseFloat(document.getElementById('slabSpanY').value),
+                supportCondition: document.getElementById('slabSupportCondition').value,
+                effectiveDepth: parseFloat(document.getElementById('slabThickness').value) - 25 // 25mm cover
             };
             
             // Calculate loads based on global parameters
-            const selfWeight = (slabThickness/1000) * 25; // 25 kN/m³ for concrete
+            const selfWeight = (designData.slab.thickness/1000) * 25; // 25 kN/m³ for concrete
             const totalDL = selfWeight + designData.loading.floorFinishLoad;
             const totalLL = designData.loading.liveLoad;
             const factoredLoad = 1.5 * (totalDL + totalLL);
             
             // Calculate moments based on support condition
-            const ratio = spanY / spanX;
+            const ratio = designData.slab.spanY / designData.slab.spanX;
             let alphaX, alphaY;
             
             // Moment coefficients based on support condition (simplified)
-            if (supportCondition === "all") {
+            if (designData.slab.supportCondition === "all") {
                 // All edges continuous
                 if (ratio < 1.1) {
                     alphaX = 0.024;
@@ -1415,7 +1495,7 @@
                     alphaX = 0.045;
                     alphaY = 0.020;
                 }
-            } else if (supportCondition === "twoAdjacent") {
+            } else if (designData.slab.supportCondition === "twoAdjacent") {
                 // Two adjacent edges discontinuous
                 if (ratio < 1.1) {
                     alphaX = 0.035;
@@ -1427,7 +1507,7 @@
                     alphaX = 0.060;
                     alphaY = 0.028;
                 }
-            } else if (supportCondition === "oneLong") {
+            } else if (designData.slab.supportCondition === "oneLong") {
                 // One long edge discontinuous
                 if (ratio < 1.1) {
                     alphaX = 0.028;
@@ -1439,7 +1519,7 @@
                     alphaX = 0.048;
                     alphaY = 0.022;
                 }
-            } else if (supportCondition === "oneShort") {
+            } else if (designData.slab.supportCondition === "oneShort") {
                 // One short edge discontinuous
                 if (ratio < 1.1) {
                     alphaX = 0.039;
@@ -1465,8 +1545,8 @@
                 }
             }
             
-            const Mx = alphaX * factoredLoad * spanX * spanX;
-            const My = alphaY * factoredLoad * spanX * spanX;
+            const Mx = alphaX * factoredLoad * designData.slab.spanX * designData.slab.spanX;
+            const My = alphaY * factoredLoad * designData.slab.spanX * designData.slab.spanX;
             
             // Calculate capacities
             const ptX = calculatePt(Mx*1e6, 1000, designData.slab.effectiveDepth, designData.materials.fck, designData.materials.fy);
@@ -1479,10 +1559,10 @@
             const basicLd = ratio <= 2 ? 26 : 20;
             const modificationFactor = 1.4; // Simplified
             const allowedLd = basicLd * modificationFactor;
-            const actualLd = (spanX*1000)/designData.slab.effectiveDepth;
+            const actualLd = (designData.slab.spanX*1000)/designData.slab.effectiveDepth;
             
             // Shear calculation (simplified)
-            const shearForce = factoredLoad * spanX / 2;
+            const shearForce = factoredLoad * designData.slab.spanX / 2;
             const shearCapacity = calculateShearCapacity(1000, designData.slab.effectiveDepth, designData.materials.fck, ptX);
             
             // Update display
@@ -1509,22 +1589,45 @@
             
             // Update flow diagram
             updateFlowDiagram();
+            
+            // Update calculation steps text
+            document.querySelector('#slab .calculation-steps').innerHTML = `
+                <h4>Load Calculation</h4>
+                <p>Self weight = ${(designData.slab.thickness/1000).toFixed(2)} × 25 = ${selfWeight.toFixed(2)} kN/m²</p>
+                <p>Finishes = ${designData.loading.floorFinishLoad.toFixed(1)} kN/m²</p>
+                <p>Live load = ${designData.loading.liveLoad.toFixed(1)} kN/m²</p>
+                <p>Total factored load = 1.5 × (${selfWeight.toFixed(2)} + ${designData.loading.floorFinishLoad.toFixed(1)} + ${designData.loading.liveLoad.toFixed(1)}) = ${factoredLoad.toFixed(3)} kN/m²</p>
+                
+                <h4>Moment Calculation (IS 456:2000)</h4>
+                <p>Ly/Lx = ${designData.slab.spanY.toFixed(1)}/${designData.slab.spanX.toFixed(1)} = ${ratio.toFixed(2)} → αx = ${alphaX.toFixed(3)}, αy = ${alphaY.toFixed(3)}</p>
+                <p>Mx = ${alphaX.toFixed(3)} × ${factoredLoad.toFixed(3)} × ${designData.slab.spanX.toFixed(1)}² = ${Mx.toFixed(2)} kNm/m</p>
+                <p>My = ${alphaY.toFixed(3)} × ${factoredLoad.toFixed(3)} × ${designData.slab.spanX.toFixed(1)}² = ${My.toFixed(2)} kNm/m</p>
+                
+                <h4>Reinforcement Calculation</h4>
+                <p>For Mx = ${Mx.toFixed(2)} kNm/m:</p>
+                <p>Mu/bd² = (${Mx.toFixed(2)}×10⁶)/(1000×${designData.slab.effectiveDepth.toFixed(0)}²) = ${(Mx*1e6/(1000*designData.slab.effectiveDepth*designData.slab.effectiveDepth)).toFixed(2)}</p>
+                <p>From SP 16, pt = ${ptX.toFixed(3)}%</p>
+                <p>Ast required = (${ptX.toFixed(3)}/100) × 1000 × ${designData.slab.effectiveDepth.toFixed(0)} = ${Math.ceil((ptX/100)*1000*designData.slab.effectiveDepth)} mm²/m</p>
+                <p>${reinforcementX} (Ast provided = ${Math.ceil((ptX/100)*1000*designData.slab.effectiveDepth)} mm²/m)</p>
+
+                <div class="cover-details">
+                    <h4>Cover Details (IS 456:2000 Clause 26.4)</h4>
+                    <p>Nominal cover for slab = 20mm (Mild exposure)</p>
+                    <p>Effective depth (d) = Overall depth (D) - Cover - Half of bar diameter</p>
+                    <p>For 10mm bars: d = ${designData.slab.thickness} - 20 - 5 = ${designData.slab.effectiveDepth}mm</p>
+                </div>
+            `;
         }
         
         // Beam design calculations
         function updateBeamDesign() {
-            const width = parseFloat(document.getElementById('beamWidth').value);
-            const depth = parseFloat(document.getElementById('beamDepth').value);
-            const span = parseFloat(document.getElementById('beamSpan').value);
-            const supportCondition = document.getElementById('beamSupportCondition').value;
-            
-            // Store beam data
+            // Update beam data from inputs
             designData.beam = {
-                width: width,
-                depth: depth,
-                span: span,
-                supportCondition: supportCondition,
-                effectiveDepth: depth - 50 // 50mm cover
+                width: parseFloat(document.getElementById('beamWidth').value),
+                depth: parseFloat(document.getElementById('beamDepth').value),
+                span: parseFloat(document.getElementById('beamSpan').value),
+                supportCondition: document.getElementById('beamSupportCondition').value,
+                effectiveDepth: parseFloat(document.getElementById('beamDepth').value) - 50 // 50mm cover
             };
             
             // Calculate loads from slab (tributary area) using global parameters
@@ -1533,7 +1636,7 @@
                 30.0; // Default if slab not calculated
             
             // Calculate self weight using global parameters
-            const selfWeight = 1.5 * (width/1000) * (depth/1000) * 25;
+            const selfWeight = 1.5 * (designData.beam.width/1000) * (designData.beam.depth/1000) * 25;
             
             // Total factored load including wall load from global parameters
             const totalLoad = slabLoad + selfWeight + (1.5 * designData.loading.wallLoad);
@@ -1541,34 +1644,34 @@
             // Calculate moment and shear based on support condition
             let moment, shear;
             
-            if (supportCondition === "simplySupported") {
-                moment = totalLoad * span * span / 8;
-                shear = totalLoad * span / 2;
-            } else if (supportCondition === "continuous") {
-                moment = totalLoad * span * span / 10; // Simplified
-                shear = totalLoad * span / 2;
-            } else if (supportCondition === "cantilever") {
-                moment = totalLoad * span * span / 2;
-                shear = totalLoad * span;
+            if (designData.beam.supportCondition === "simplySupported") {
+                moment = totalLoad * designData.beam.span * designData.beam.span / 8;
+                shear = totalLoad * designData.beam.span / 2;
+            } else if (designData.beam.supportCondition === "continuous") {
+                moment = totalLoad * designData.beam.span * designData.beam.span / 10; // Simplified
+                shear = totalLoad * designData.beam.span / 2;
+            } else if (designData.beam.supportCondition === "cantilever") {
+                moment = totalLoad * designData.beam.span * designData.beam.span / 2;
+                shear = totalLoad * designData.beam.span;
             } else {
                 // Fixed at both ends
-                moment = totalLoad * span * span / 12;
-                shear = totalLoad * span / 2;
+                moment = totalLoad * designData.beam.span * designData.beam.span / 12;
+                shear = totalLoad * designData.beam.span / 2;
             }
             
             // Calculate capacities using current material properties
-            const pt = calculatePt(moment*1e6, width, designData.beam.effectiveDepth, designData.materials.fck, designData.materials.fy);
-            const momentCapacity = calculateMomentCapacity(pt, width, designData.beam.effectiveDepth, designData.materials.fck, designData.materials.fy);
-            const shearCapacity = calculateShearCapacity(width, designData.beam.effectiveDepth, designData.materials.fck, pt);
+            const pt = calculatePt(moment*1e6, designData.beam.width, designData.beam.effectiveDepth, designData.materials.fck, designData.materials.fy);
+            const momentCapacity = calculateMomentCapacity(pt, designData.beam.width, designData.beam.effectiveDepth, designData.materials.fck, designData.materials.fy);
+            const shearCapacity = calculateShearCapacity(designData.beam.width, designData.beam.effectiveDepth, designData.materials.fck, pt);
             
             // Deflection check (simplified)
             const basicLd = 20;
             const modificationFactor = 1.0; // Simplified
             const allowedLd = basicLd * modificationFactor;
-            const actualLd = (span*1000)/designData.beam.effectiveDepth;
+            const actualLd = (designData.beam.span*1000)/designData.beam.effectiveDepth;
             
             // Ductility check (IS 13920)
-            const ductilityRatio = (width * depth * designData.materials.fck) / (100 * designData.materials.fy);
+            const ductilityRatio = (designData.beam.width * designData.beam.depth * designData.materials.fck) / (100 * designData.materials.fy);
             
             // Update display
             document.getElementById('beamMoment').textContent = moment.toFixed(2) + ' kNm';
@@ -1590,29 +1693,55 @@
             }
             
             // Update reinforcement
-            const mainReinforcement = calculateBeamReinforcement(moment*1e6, width, designData.beam.effectiveDepth, designData.materials.fck, designData.materials.fy);
-            const stirrups = calculateBeamStirrups(shear*1e3, width, designData.beam.effectiveDepth, designData.materials.fck, pt);
+            const mainReinforcement = calculateBeamReinforcement(moment*1e6, designData.beam.width, designData.beam.effectiveDepth, designData.materials.fck, designData.materials.fy);
+            const stirrups = calculateBeamStirrups(shear*1e3, designData.beam.width, designData.beam.effectiveDepth, designData.materials.fck, pt);
             
             document.getElementById('beamMainReinforcement').textContent = mainReinforcement;
             document.getElementById('beamStirrups').textContent = stirrups;
             
             // Update flow diagram
             updateFlowDiagram();
+            
+            // Update calculation steps text
+            document.querySelector('#beam .calculation-steps').innerHTML = `
+                <h4>Load Calculation</h4>
+                <p>From slab (tributary area): ${(designData.slab.thickness/1000 * 25 + designData.loading.floorFinishLoad + designData.loading.liveLoad).toFixed(2)} × (${designData.slab.spanX.toFixed(1)}/2) = ${slabLoad.toFixed(2)} kN/m</p>
+                <p>Self weight = ${(designData.beam.width/1000).toFixed(3)} × ${(designData.beam.depth/1000).toFixed(3)} × 25 = ${selfWeight.toFixed(2)} kN/m</p>
+                <p>Wall load = ${designData.loading.wallLoad.toFixed(1)} kN/m</p>
+                <p>Total factored load = 1.5 × (${slabLoad.toFixed(2)} + ${selfWeight.toFixed(2)} + ${designData.loading.wallLoad.toFixed(1)}) = ${totalLoad.toFixed(2)} kN/m</p>
+                
+                <h4>Moment & Shear (IS 456:2000)</h4>
+                <p>Moment = wl²/8 = ${totalLoad.toFixed(2)} × ${designData.beam.span.toFixed(1)}² / 8 = ${moment.toFixed(2)} kNm</p>
+                <p>Shear = wl/2 = ${totalLoad.toFixed(2)} × ${designData.beam.span.toFixed(1)} / 2 = ${shear.toFixed(2)} kN</p>
+                
+                <h4>Reinforcement Calculation</h4>
+                <p>Mu/bd² = (${moment.toFixed(2)}×10⁶)/(${designData.beam.width.toFixed(0)}×${designData.beam.effectiveDepth.toFixed(0)}²) = ${(moment*1e6/(designData.beam.width*designData.beam.effectiveDepth*designData.beam.effectiveDepth)).toFixed(2)}</p>
+                <p>From SP 16, pt = ${pt.toFixed(3)}% (Fe${designData.materials.fy}, M${designData.materials.fck})</p>
+                <p>Ast required = (${pt.toFixed(3)}/100) × ${designData.beam.width.toFixed(0)} × ${designData.beam.effectiveDepth.toFixed(0)} = ${Math.ceil((pt/100)*designData.beam.width*designData.beam.effectiveDepth)} mm²</p>
+                <p>${mainReinforcement} (Ast provided = ${Math.ceil((pt/100)*designData.beam.width*designData.beam.effectiveDepth)} mm²)</p>
+                <p>Shear reinforcement:</p>
+                <p>τv = Vu/bd = ${shear.toFixed(2)}×10³/(${designData.beam.width.toFixed(0)}×${designData.beam.effectiveDepth.toFixed(0)}) = ${(shear*1000/(designData.beam.width*designData.beam.effectiveDepth)).toFixed(2)} MPa</p>
+                <p>τc = 0.64 MPa (For M${designData.materials.fck} and pt=${pt.toFixed(2)}%)</p>
+                <p>Shear to be carried by stirrups = τv - τc = ${(shear*1000/(designData.beam.width*designData.beam.effectiveDepth) - 0.64).toFixed(2)} MPa</p>
+                <p>${stirrups}</p>
+
+                <div class="cover-details">
+                    <h4>Cover Details (IS 456:2000 Clause 26.4)</h4>
+                    <p>Nominal cover for beam = 25mm (Moderate exposure)</p>
+                    <p>Effective depth (d) = Overall depth (D) - Cover - Stirrup dia - Half of bar diameter</p>
+                    <p>For 25mm bars and 8mm stirrups: d = ${designData.beam.depth} - 25 - 8 - 12.5 = ${designData.beam.effectiveDepth}mm</p>
+                </div>
+            `;
         }
         
         // Column design calculations
         function updateColumnDesign() {
-            const width = parseFloat(document.getElementById('columnWidth').value);
-            const depth = parseFloat(document.getElementById('columnDepth').value);
-            const height = parseFloat(document.getElementById('columnHeight').value);
-            const columnType = document.getElementById('columnType').value;
-            
-            // Store column data
+            // Update column data from inputs
             designData.column = {
-                width: width,
-                depth: depth,
-                height: height,
-                type: columnType
+                width: parseFloat(document.getElementById('columnWidth').value),
+                depth: parseFloat(document.getElementById('columnDepth').value),
+                height: parseFloat(document.getElementById('columnHeight').value),
+                type: document.getElementById('columnType').value
             };
             
             // Calculate loads from beams (tributary area) using global parameters
@@ -1621,24 +1750,24 @@
                 500.0; // Default if beam not calculated
             
             // Calculate self weight using global parameters
-            const selfWeight = 1.5 * (width/1000) * (depth/1000) * height * 25;
+            const selfWeight = 1.5 * (designData.column.width/1000) * (designData.column.depth/1000) * designData.column.height * 25;
             
             // Total factored load
             const axialLoad = beamLoad + selfWeight;
             
             // Moments from ETABS analysis (simplified)
-            const momentX = 0.1 * axialLoad * height / 2;
-            const momentY = 0.07 * axialLoad * height / 2;
+            const momentX = 0.1 * axialLoad * designData.column.height / 2;
+            const momentY = 0.07 * axialLoad * designData.column.height / 2;
             
             // Calculate capacities using current material properties
-            const axialCapacity = calculateAxialCapacity(width, depth, designData.materials.fck, 2.0); // 2% steel
-            const momentCapacityX = calculateMomentCapacityColumn(width, depth, designData.materials.fck, designData.materials.fy, 2.0);
-            const momentCapacityY = calculateMomentCapacityColumn(depth, width, designData.materials.fck, designData.materials.fy, 2.0);
+            const axialCapacity = calculateAxialCapacity(designData.column.width, designData.column.depth, designData.materials.fck, 2.0); // 2% steel
+            const momentCapacityX = calculateMomentCapacityColumn(designData.column.width, designData.column.depth, designData.materials.fck, designData.materials.fy, 2.0);
+            const momentCapacityY = calculateMomentCapacityColumn(designData.column.depth, designData.column.width, designData.materials.fck, designData.materials.fy, 2.0);
             
             // Slenderness check
-            const effectiveLength = 0.65 * height * 1000; // mm
-            const slendernessX = effectiveLength / depth;
-            const slendernessY = effectiveLength / width;
+            const effectiveLength = 0.65 * designData.column.height * 1000; // mm
+            const slendernessX = effectiveLength / designData.column.depth;
+            const slendernessY = effectiveLength / designData.column.width;
             const isShort = slendernessX < 12 && slendernessY < 12;
             
             // Ductility check (IS 13920)
@@ -1672,30 +1801,56 @@
             }
             
             // Update reinforcement
-            const mainReinforcement = calculateColumnReinforcement(width, depth, axialLoad*1e3, momentX*1e6, momentY*1e6, designData.materials.fck, designData.materials.fy);
-            const ties = calculateColumnTies(width, depth, designData.materials.fy, columnType);
+            const mainReinforcement = calculateColumnReinforcement(designData.column.width, designData.column.depth, axialLoad*1e3, momentX*1e6, momentY*1e6, designData.materials.fck, designData.materials.fy);
+            const ties = calculateColumnTies(designData.column.width, designData.column.depth, designData.materials.fy, designData.column.type);
             
             document.getElementById('columnMainReinforcement').textContent = mainReinforcement;
             document.getElementById('columnTies').textContent = ties;
             
             // Update flow diagram
             updateFlowDiagram();
+            
+            // Update calculation steps text
+            document.querySelector('#column .calculation-steps').innerHTML = `
+                <h4>Load Calculation</h4>
+                <p>From beams (tributary area): 2 × ${beamLoad.toFixed(2)} kN = ${(2*beamLoad).toFixed(2)} kN</p>
+                <p>Self weight = ${(designData.column.width/1000).toFixed(3)} × ${(designData.column.depth/1000).toFixed(3)} × ${designData.column.height.toFixed(1)} × 25 = ${selfWeight.toFixed(2)} kN</p>
+                <p>Total factored load = 1.5 × (${(2*beamLoad).toFixed(2)} + ${selfWeight.toFixed(2)}) = ${axialLoad.toFixed(2)} kN</p>
+                <p>Moments from ETABS analysis: Mx = ${momentX.toFixed(2)} kNm, My = ${momentY.toFixed(2)} kNm</p>
+                
+                <h4>Slenderness Check (IS 456:2000)</h4>
+                <p>Effective length factor = 0.65 (braced)</p>
+                <p>Effective length = 0.65 × ${designData.column.height.toFixed(1)} = ${effectiveLength/1000} m</p>
+                <p>λx = ${effectiveLength}/${designData.column.depth} = ${slendernessX.toFixed(2)}, λy = ${effectiveLength}/${designData.column.width} = ${slendernessY.toFixed(2)}</p>
+                
+                <h4>Reinforcement Calculation</h4>
+                <p>Minimum reinforcement = 0.8% of gross area (IS 13920)</p>
+                <p>Ast required = 0.008 × ${designData.column.width} × ${designData.column.depth} = ${Math.ceil(0.008*designData.column.width*designData.column.depth)} mm²</p>
+                <p>${mainReinforcement} (Ast provided = ${Math.ceil(0.008*designData.column.width*designData.column.depth)} mm²)</p>
+                <p>Special confining reinforcement as per IS 13920:</p>
+                <p>${ties}</p>
+
+                <div class="cover-details">
+                    <h4>Cover Details (IS 456:2000 Clause 26.4)</h4>
+                    <p>Nominal cover for column = 40mm (Moderate exposure)</p>
+                    <p>For seismic design, cover should not be less than 40mm (IS 13920 Clause 7.1.3)</p>
+                    <p>Spacing of ties should not exceed:</p>
+                    <p>- Least lateral dimension = ${Math.min(designData.column.width, designData.column.depth)}mm</p>
+                    <p>- 16 × smallest longitudinal bar = 16 × 16 = 256mm</p>
+                    <p>- 300mm</p>
+                </div>
+            `;
         }
         
         // Footing design calculations
         function updateFootingDesign() {
-            const length = parseFloat(document.getElementById('footingLength').value);
-            const width = parseFloat(document.getElementById('footingWidth').value);
-            const thickness = parseFloat(document.getElementById('footingThickness').value);
-            const soilType = document.getElementById('soilType').value;
-            
-            // Store footing data
+            // Update footing data from inputs
             designData.footing = {
-                length: length,
-                width: width,
-                thickness: thickness,
-                soilType: soilType,
-                effectiveDepth: thickness - 50 // 50mm cover
+                length: parseFloat(document.getElementById('footingLength').value),
+                width: parseFloat(document.getElementById('footingWidth').value),
+                thickness: parseFloat(document.getElementById('footingThickness').value),
+                soilType: document.getElementById('soilType').value,
+                effectiveDepth: parseFloat(document.getElementById('footingThickness').value) - 50 // 50mm cover
             };
             
             // Get column load from global parameters
@@ -1705,13 +1860,13 @@
                 800.0; // Default if column not calculated
             
             // Calculate self weight
-            const selfWeight = length * width * (thickness/1000) * 25;
+            const selfWeight = designData.footing.length * designData.footing.width * (designData.footing.thickness/1000) * 25;
             
             // Total load
             const totalLoad = columnLoad + selfWeight;
             
             // Soil pressure using soil capacity from global parameters
-            const area = length * width;
+            const area = designData.footing.length * designData.footing.width;
             const pressure = totalLoad / area;
             
             // Calculate capacities using current material properties
@@ -1720,7 +1875,7 @@
             const punchingCapacity = calculatePunchingCapacity(designData.column.width, designData.column.depth, designData.footing.effectiveDepth, designData.materials.fck);
             
             // Moments and shears (simplified)
-            const cantileverLength = (length - (designData.column.depth/1000)) / 2;
+            const cantileverLength = (designData.footing.length - (designData.column.depth/1000)) / 2;
             const moment = 1.5 * pressure * cantileverLength * cantileverLength / 2;
             const shear = 1.5 * pressure * cantileverLength;
             const punchingShear = totalLoad;
@@ -1750,14 +1905,14 @@
             
             // Update foundation type based on soil type and global parameters
             let foundationType = "Shallow Foundation";
-            let recommendation = `For ${soilType} soil with bearing capacity of ${designData.loading.soilCapacity} kN/m², isolated footing is recommended.`;
+            let recommendation = `For ${designData.footing.soilType} soil with bearing capacity of ${designData.loading.soilCapacity} kN/m², isolated footing is recommended.`;
             
-            if (soilType === "medium") {
+            if (designData.footing.soilType === "medium") {
                 if (designData.loading.soilCapacity < 100) {
                     foundationType = "Consider Raft Foundation";
                     recommendation = "For medium soil with bearing capacity below 100 kN/m², raft foundation is recommended to distribute loads evenly.";
                 }
-            } else if (soilType === "soft") {
+            } else if (designData.footing.soilType === "soft") {
                 if (designData.loading.soilCapacity < 75) {
                     foundationType = "Pile Foundation Required";
                     recommendation = "For soft soil with bearing capacity below 75 kN/m², pile foundation is recommended to transfer loads to deeper, more stable strata.";
@@ -1772,34 +1927,63 @@
             
             // Update flow diagram
             updateFlowDiagram();
+            
+            // Update calculation steps text
+            document.querySelector('#footing .calculation-steps').innerHTML = `
+                <h4>Load Calculation</h4>
+                <p>Column load = ${columnLoad.toFixed(2)} kN (from column design)</p>
+                <p>Self weight = ${designData.footing.length.toFixed(1)} × ${designData.footing.width.toFixed(1)} × ${(designData.footing.thickness/1000).toFixed(3)} × 25 = ${selfWeight.toFixed(2)} kN</p>
+                <p>Total load = ${columnLoad.toFixed(2)} + ${selfWeight.toFixed(2)} = ${totalLoad.toFixed(2)} kN</p>
+                
+                <h4>Soil Pressure (IS 456:2000)</h4>
+                <p>Area = ${designData.footing.length.toFixed(1)} × ${designData.footing.width.toFixed(1)} = ${area.toFixed(2)} m²</p>
+                <p>Pressure = ${totalLoad.toFixed(2)} / ${area.toFixed(2)} = ${pressure.toFixed(2)} kN/m²</p>
+                <p>Allowable pressure = ${designData.loading.soilCapacity} kN/m² (from input)</p>
+                
+                <h4>Reinforcement Calculation</h4>
+                <p>Cantilever length = (${designData.footing.length.toFixed(1)} - ${(designData.column.depth/1000).toFixed(2)})/2 = ${cantileverLength.toFixed(3)} m</p>
+                <p>Moment = 1.5 × ${designData.loading.soilCapacity} × ${cantileverLength.toFixed(3)}² / 2 = ${moment.toFixed(2)} kNm/m</p>
+                <p>Mu/bd² = (${moment.toFixed(2)}×10⁶)/(1000×${designData.footing.effectiveDepth.toFixed(0)}²) = ${(moment*1e6/(1000*designData.footing.effectiveDepth*designData.footing.effectiveDepth)).toFixed(2)}</p>
+                <p>From SP 16, pt = 0.056% (min 0.12%)</p>
+                <p>${bottomReinforcement} (Ast = 754 mm²/m)</p>
+
+                <div class="cover-details">
+                    <h4>Cover Details (IS 456:2000 Clause 26.4)</h4>
+                    <p>Nominal cover for footing = 50mm (Severe exposure)</p>
+                    <p>Effective depth (d) = Overall depth (D) - Cover - Half of bar diameter</p>
+                    <p>For 12mm bars: d = ${designData.footing.thickness} - 50 - 6 = ${designData.footing.effectiveDepth}mm</p>
+                </div>
+
+                <div id="foundationRecommendations" class="irregularity-check">
+                    <h4>Foundation Recommendations</h4>
+                    <p>${recommendation}</p>
+                    <p>Minimum depth of foundation as per IS 1904:</p>
+                    <p>- For hard soil: 0.6m to 0.9m</p>
+                    <p>- For medium soil: 0.9m to 1.2m</p>
+                    <p>- For soft soil: Consider pile foundation if depth exceeds 1.5m</p>
+                </div>
+            `;
         }
         
         // Torsional irregularity checks
         function updateTorsionChecks() {
-            const lengthX = parseFloat(document.getElementById('buildingLengthX').value);
-            const widthY = parseFloat(document.getElementById('buildingWidthY').value);
-            const cmX = parseFloat(document.getElementById('centerMassX').value);
-            const cmY = parseFloat(document.getElementById('centerMassY').value);
-            const csX = parseFloat(document.getElementById('centerStiffnessX').value);
-            const csY = parseFloat(document.getElementById('centerStiffnessY').value);
-            
-            // Store torsion data
+            // Update torsion data from inputs
             designData.torsion = {
-                lengthX: lengthX,
-                widthY: widthY,
-                cmX: cmX,
-                cmY: cmY,
-                csX: csX,
-                csY: csY
+                lengthX: parseFloat(document.getElementById('buildingLengthX').value),
+                widthY: parseFloat(document.getElementById('buildingWidthY').value),
+                cmX: parseFloat(document.getElementById('centerMassX').value),
+                cmY: parseFloat(document.getElementById('centerMassY').value),
+                csX: parseFloat(document.getElementById('centerStiffnessX').value),
+                csY: parseFloat(document.getElementById('centerStiffnessY').value)
             };
             
             // Calculate eccentricities
-            const eccX = Math.abs(cmX - csX);
-            const eccY = Math.abs(cmY - csY);
+            const eccX = Math.abs(designData.torsion.cmX - designData.torsion.csX);
+            const eccY = Math.abs(designData.torsion.cmY - designData.torsion.csY);
             
             // Calculate radii of gyration
-            const radiusX = 0.2 * lengthX;
-            const radiusY = 0.2 * widthY;
+            const radiusX = 0.2 * designData.torsion.lengthX;
+            const radiusY = 0.2 * designData.torsion.widthY;
             
             // Calculate torsional irregularity ratios
             const ratioX = eccX / radiusX;
@@ -1826,42 +2010,48 @@
                 document.getElementById('torsionIrregularityPresent').textContent = 'Yes';
                 document.getElementById('torsionIrregularityStatus').innerHTML = '<span class="status-badge status-warning">Check</span>';
             }
+            
+            // Update calculation steps text
+            document.querySelector('#torsion .calculation-steps').innerHTML = `
+                <h4>Calculations (Clause 7.1)</h4>
+                <p>Eccentricity in X direction = |CMx - CSx| = |${designData.torsion.cmX.toFixed(1)} - ${designData.torsion.csX.toFixed(1)}| = ${eccX.toFixed(2)} m</p>
+                <p>Eccentricity in Y direction = |CMy - CSy| = |${designData.torsion.cmY.toFixed(1)} - ${designData.torsion.csY.toFixed(1)}| = ${eccY.toFixed(2)} m</p>
+                <p>Radius of gyration (rx) = 0.2 × Building Length = 0.2 × ${designData.torsion.lengthX.toFixed(1)} = ${radiusX.toFixed(2)} m</p>
+                <p>Radius of gyration (ry) = 0.2 × Building Width = 0.2 × ${designData.torsion.widthY.toFixed(1)} = ${radiusY.toFixed(2)} m</p>
+                <p>Torsional irregularity ratio X = ex/rx = ${eccX.toFixed(2)}/${radiusX.toFixed(2)} = ${ratioX.toFixed(3)}</p>
+                <p>Torsional irregularity ratio Y = ey/ry = ${eccY.toFixed(2)}/${radiusY.toFixed(2)} = ${ratioY.toFixed(3)}</p>
+                <p>Maximum ratio = ${maxRatio.toFixed(3)} ${maxRatio <= 0.15 ? '<' : '>'} 0.15 → Structure is ${maxRatio <= 0.15 ? 'torsionally regular' : 'torsionally irregular'}</p>
+            `;
         }
         
         // Structural irregularity checks
         function updateIrregularityChecks() {
-            const massIrregularity = document.getElementById('massIrregularity').value;
-            const verticalGeometric = document.getElementById('verticalGeometricIrregularity').value;
-            const stiffnessIrregularity = document.getElementById('stiffnessIrregularity').value;
-            const verticalDiscontinuity = document.getElementById('verticalDiscontinuity').value;
-            const reentrantCorners = document.getElementById('reentrantCorners').value;
-            
-            // Store irregularity data
+            // Update irregularity data from inputs
             designData.irregularity = {
-                massIrregularity: massIrregularity,
-                verticalGeometric: verticalGeometric,
-                stiffnessIrregularity: stiffnessIrregularity,
-                verticalDiscontinuity: verticalDiscontinuity,
-                reentrantCorners: reentrantCorners
+                massIrregularity: document.getElementById('massIrregularity').value,
+                verticalGeometric: document.getElementById('verticalGeometricIrregularity').value,
+                stiffnessIrregularity: document.getElementById('stiffnessIrregularity').value,
+                verticalDiscontinuity: document.getElementById('verticalDiscontinuity').value,
+                reentrantCorners: document.getElementById('reentrantCorners').value
             };
             
             // Update display
-            document.getElementById('massIrregularityPresent').textContent = massIrregularity === 'yes' ? 'Yes' : 'No';
-            document.getElementById('verticalGeometricIrregularityPresent').textContent = verticalGeometric === 'yes' ? 'Yes' : 'No';
-            document.getElementById('stiffnessIrregularityPresent').textContent = stiffnessIrregularity === 'yes' ? 'Yes' : 'No';
-            document.getElementById('verticalDiscontinuityPresent').textContent = verticalDiscontinuity === 'yes' ? 'Yes' : 'No';
-            document.getElementById('reentrantCornersPresent').textContent = reentrantCorners === 'yes' ? 'Yes' : 'No';
+            document.getElementById('massIrregularityPresent').textContent = designData.irregularity.massIrregularity === 'yes' ? 'Yes' : 'No';
+            document.getElementById('verticalGeometricIrregularityPresent').textContent = designData.irregularity.verticalGeometric === 'yes' ? 'Yes' : 'No';
+            document.getElementById('stiffnessIrregularityPresent').textContent = designData.irregularity.stiffnessIrregularity === 'yes' ? 'Yes' : 'No';
+            document.getElementById('verticalDiscontinuityPresent').textContent = designData.irregularity.verticalDiscontinuity === 'yes' ? 'Yes' : 'No';
+            document.getElementById('reentrantCornersPresent').textContent = designData.irregularity.reentrantCorners === 'yes' ? 'Yes' : 'No';
             
             // Update status
-            updateIrregularityStatus('massIrregularityStatus', massIrregularity);
-            updateIrregularityStatus('verticalGeometricIrregularityStatus', verticalGeometric);
-            updateIrregularityStatus('stiffnessIrregularityStatus', stiffnessIrregularity);
-            updateIrregularityStatus('verticalDiscontinuityStatus', verticalDiscontinuity);
-            updateIrregularityStatus('reentrantCornersStatus', reentrantCorners);
+            updateIrregularityStatus('massIrregularityStatus', designData.irregularity.massIrregularity);
+            updateIrregularityStatus('verticalGeometricIrregularityStatus', designData.irregularity.verticalGeometric);
+            updateIrregularityStatus('stiffnessIrregularityStatus', designData.irregularity.stiffnessIrregularity);
+            updateIrregularityStatus('verticalDiscontinuityStatus', designData.irregularity.verticalDiscontinuity);
+            updateIrregularityStatus('reentrantCornersStatus', designData.irregularity.reentrantCorners);
             
             // Show recommendations if any irregularity exists
-            if (massIrregularity === 'yes' || verticalGeometric === 'yes' || stiffnessIrregularity === 'yes' || 
-                verticalDiscontinuity === 'yes' || reentrantCorners === 'yes') {
+            if (designData.irregularity.massIrregularity === 'yes' || designData.irregularity.verticalGeometric === 'yes' || designData.irregularity.stiffnessIrregularity === 'yes' || 
+                designData.irregularity.verticalDiscontinuity === 'yes' || designData.irregularity.reentrantCorners === 'yes') {
                 document.getElementById('irregularityRecommendations').style.display = 'block';
             } else {
                 document.getElementById('irregularityRecommendations').style.display = 'none';
